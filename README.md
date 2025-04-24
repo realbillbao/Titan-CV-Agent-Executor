@@ -30,7 +30,7 @@ During the execution process, the Executor will parse the incoming instructions 
 
 ### Overall Architecture
 
-![image-20250423103457835](C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20250423103457835.png)
+![image-20250423103457835](imgs/framework.png)
 
 Overall, the executor can be consists of three main stages: LLM loading and response preprocessing, Sandbox execution preparation and actual execution, and the corresponding error handling mechanism. Each stage has several functional modules that are combined and coordinated with each other.
 
