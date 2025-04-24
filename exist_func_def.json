@@ -1,0 +1,1144 @@
+[
+    {
+        "name": "preprocess",
+        "description": "对单张图片或图片列表中的每张图片进行预处理。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+              "image_path_list": {
+                "oneOf": [
+                  {"type": "string"},
+                  {"type": "array","items": {"type": "string"}}
+                ],
+                "description": "预处理输入图片的路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                "component_type": "images",
+                "require_version": false
+              },
+              "resize_dims": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "预处理重采样图片 (w宽度, h高度)。Tuple类型。举例：(128,128)。",
+                "require_version": true
+              },
+              "crop_coords": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 4,
+                "maxItems": 4,
+                "description": "预处理裁切图像的坐标 (左上角横坐标x, 左上角纵坐标y, 裁切宽度w, 裁切高度h)。Tuple类型。举例：(100,100,50,50)。",
+                "require_version": true
+              },
+              "rotate_angle": {
+                "type": "number",
+                "description": "预处理图片的旋转角度。举例：30.0。",
+                "require_version": true
+              },
+              "rotate_center": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "预处理图片的旋转中心 (x, y)。Tuple类型。举例：(100,100)。",
+                "require_version": true
+              },
+              "rotate_scale": {
+                "type": "number",
+                "description": "预处理旋转时的缩放比例。举例：1.5。",
+                "require_version": true
+              },
+              "flip_code": {
+                "type": "integer",
+                "description": "预处理翻转图像代码，0是垂直翻转，1是水平翻转，-1是垂直水平同时翻转。举例：1。",
+                "require_version": true
+              },
+              "affine_translation": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "预处理仿射变换的偏差值(x, y)。Tuple类型。举例：(200,200)。",
+                "require_version": true
+              },
+              "color_conversion": {
+                "type": "integer",
+                "description": "预处理颜色转换代码。BGR2GRAY:6,BGR2RGB:4,BGR2HSV:40,BGR2YCrCb:36。举例：6。",
+                "require_version": true
+              }
+            },
+            "required": ["image_path_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "preprocessed_path_list":{
+                    "type": "array",
+                    "description": "预处理完的图片列表。",
+                    "items": {"type":"string"},
+                    "component_type": "images"
+                }
+            },
+            "required":["preprocessed_path_list"]
+        }
+    },
+
+
+    {
+        "name": "postprocess",
+        "description": "对单张图片或图片列表中的每张图片进行后处理。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+              "image_path_list": {
+                "oneOf": [
+                  {"type": "string"},
+                  {"type": "array", "items": {"type": "string"}}
+                ],
+                "description": "后处理图像的路径或路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                "component_type": "images",
+                "require_version": false
+              },
+              "blur_type": {
+                "type": "string",
+                "enum": ["gaussian", "median", "mean"],
+                "description": "后处理要应用的模糊类型。",
+                "require_version": true
+              },
+              "blur_ksize": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "后处理模糊处理的核大小 (宽度, 高度)。Tuple类型。",
+                "require_version": true
+              },
+              "canny_thresholds": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "后处理Canny边缘检测的阈值。Tuple类型。",
+                "require_version": true
+              },
+              "equalize_hist": {
+                "type": "boolean",
+                "default": false,
+                "description": "后处理是否应用直方图均衡化。",
+                "require_version": true
+              },
+              "thresholding": {
+                "type": "array",
+                "items": {"type": "integer"},
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "后处理阈值处理的参数.格式：(阈值, 最大值, 类型)。Tuple类型。",
+                "require_version": true
+              },
+              "draw_contours": {
+                "type": "boolean",
+                "default": false,
+                "description": "后处理是否在图像上绘制轮廓。",
+                "require_version": true
+              },
+              "morphology": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    },
+                    "minItems": 2,
+                    "maxItems": 2
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ],
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "后处理形态学操作参数。格式： (操作类型, 核大小, 迭代次数)。Tuple类型。",
+                "require_version": true
+              },
+              "sobel_edges": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 3,
+                "maxItems": 3,
+                "description": "后处理Sobel 边缘检测参数 (dx, dy, 核大小)。Tuple类型。",
+                "require_version": true
+              },
+              "laplacian_edges": {
+                "type": "boolean",
+                "default": false,
+                "description": "后处理是否应用拉普拉斯边缘检测。",
+                "require_version": true
+              },
+              "sharpen": {
+                "type": "boolean",
+                "default": false,
+                "description": "后处理是否应用锐化滤波器。",
+                "require_version": true
+              },
+              "add_noise": {
+                "type": "boolean",
+                "default": false,
+                "description": "后处理是否向图像添加噪声。",
+                "require_version": true
+              },
+              "change_brightness_contrast": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 2,
+                "maxItems": 2,
+                "description": "后处理调整亮度和对比度的参数 (亮度, 对比度)。Tuple类型。",
+                "require_version": true
+              }
+            },
+            "required": ["image_path_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "postprocessed_path_list":{
+                    "type": "array",
+                    "description": "后处理完的图片列表。",
+                    "items": {"type":"string"},
+                    "component_type": "images"
+                }
+            },
+            "required":["postprocessed_path_list"]
+        }
+    },
+
+
+    {
+        "name": "detection",
+        "description": "对单张或一组图片进行检测，确定每张图片针对查询物体类别的边界框。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path_list": {
+                    "description": "输入图片的路径或路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "images",
+                    "require_version": false
+                },
+                "query_list": {
+                    "description": "待检测的物体类别列表。举例：['people','car',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "keywords",
+                    "require_version": false
+                },
+                "method": {
+                    "type": "string",
+                    "description": "使用的具体检测方法。推荐使用dino。dino和yolo_world是零样本检测方法。",
+                    "enum": ["dino", "yolo_world"],
+                    "default": "dino",
+                    "require_version": true
+                },
+                "confidence_threshold": {
+                    "type": "number",
+                    "description": "用于筛选边界框的信心值阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "require_version": true
+                },
+                "iou_threshold": {
+                    "type": "number",
+                    "description": "用于筛选边界框的交并比阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "require_version": true
+                },
+                "image_resize": {
+                    "type": "array",
+                    "description": "重采样图片。格式：（重采样后的图片长度, 重采样后的图片高度），举例：(500,500)。",
+                    "items": {"type": "integer"},
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "require_version": true
+                },
+                "fp16_inference": {
+                    "type": "boolean",
+                    "description": "是否启用fp16推理，降低精度加快速度。",
+                    "default": false,
+                    "require_version": true
+                },
+                "max_bboxes": {
+                    "type": "integer",
+                    "description": "检测到的边界框的最大数量。",
+                    "minimum": 1,
+                    "require_version": true
+                },
+                "detect_classes": {
+                    "type": "array",
+                    "description": "待检测的物体类别的数字列表替代。举例：[0,1,...]。对应'query_list'，可以不写。",
+                    "items": {"type": "integer"},
+                    "require_version": true
+                },
+                  "high_resolution": {
+                    "type": "boolean",
+                    "description": "是否启用高分辨率推理，提高精度减慢速度。",
+                    "default": false,
+                    "require_version": true
+                }
+            },
+            "required":["image_path_list","query_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "image_path_list": {
+                    "type": "array",
+                    "description": "检测前的图片的路径列表。格式：[image1.jpg,...]。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "predict_img_list": {
+                    "type": "array", 
+                    "description": "检测后图片的路径列表。格式：[detected_image1.jpg,...]。",
+                    "items": {"type": "string"},
+                    "component_type": "images"
+                },
+                "boxes_list": {
+                    "type": "array",
+                    "description": "输出检测后每张图片的bbox，坐标是用浮点数内容的字符串。格式：[[[左上角横坐标, 左上角纵坐标, 右下角横坐标, 右下角纵坐标, 信心值, 类别],...],...]。",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf":[
+                                {"type": "array", "maxItems": 0},
+                                {"type": "array", "items":{"type": "string"},"maxItems":6, "minItems":6}
+                            ]
+                        }
+                    }   
+                },
+                "classes_name_dict": {
+                    "type": "object", 
+                    "description": "输出检测后所有图片的类别信息。格式：{类别编号:类别字串,...}。"
+                },
+                "predict_speeds_dict": {
+                    "type": "object", 
+                    "description": "输出检测所消耗的时间。格式：{'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0}}。",
+                    "properties": {
+                        "preprocess": {
+                            "type": "number",
+                            "description": "预处理耗时。",
+                            "minimum": 0.0
+                        },
+                        "inference": {
+                            "type": "number",
+                            "description": "模型推断耗时。",
+                            "minimum": 0.0
+                        },
+                        "postprocess": {
+                            "type": "number",
+                            "description": "后处理耗时。",
+                            "minimum": 0.0
+                        }
+                    }
+                }
+            },
+            "required":["image_path_list","predict_img_list","boxes_list","classes_name_dict","predict_speeds_dict"]
+        }
+    },
+
+
+    
+    {
+        "name": "segmentation",
+        "description": "对单张或一组图片进行分割，确定每张图片针对查询物体类别的掩码。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path_list": {
+                    "description": "输入图片的路径或路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "images",
+                    "require_version": false
+                },
+                "query_list": {
+                    "description": "待分割的物体单个类别字符串或类别列表。举例：['people','car',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "keywords",
+                    "require_version": false
+                },
+                "method": {
+                    "type": "string",
+                    "description": "使用的具体分割方法。lan_sam是零样本分割方法。",
+                    "enum": ["lan_sam"],
+                    "require_version": true
+                },
+                "bbox_threshold": {
+                    "type": "number",
+                    "description": "用于lan_sam等方法中dino筛选边界框的信心值阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.3,
+                    "require_version": true
+                },
+                "text_threshold": {
+                    "type": "number",
+                    "description": "用于lan_sam等方法中clip筛选文本的信心值阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "default": 0.25,
+                    "require_version": true
+                }
+            },
+            "required":["input_image_list","query_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "image_path_list": {
+                    "type": "array", 
+                    "description": "分割前图片的路径列表。格式：[image1.jpg,...]。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "predict_img_list": {
+                    "type": "array", 
+                    "description": "分割后图片的路径列表。格式：[detected_image1.jpg,...]。",
+                    "items": {"type": "string"},
+                    "component_type": "images"
+                },
+                "boxes_list": {
+                    "type": "array", 
+                    "description": "输出分割后每张图片的bbox。格式：[[[左上角横坐标, 左上角纵坐标, 右下角横坐标, 右下角纵坐标, 信心值, 类别],...],...]。",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf":[
+                                {"type": "array", "maxItems": 0},
+                                {"type": "array", "items":{"type": "string"},"maxItems":6, "minItems":6}
+                            ]
+                        }
+                    }     
+                },
+                "mask_image_list": {
+                    "type": "array", 
+                    "description": "输出分割后每张图片的掩码图片。和image_path_list长度对应，每张掩码图片的每个像素的RGB通道代表其类别。",
+                    "items": { "type": "string"}
+                },
+                "classes_name_dict": {
+                    "type": "object", 
+                    "description": "输出分割后所有图片的类别信息。格式：{类别编号:类别字串,...}。"
+                },
+                "predict_speeds_dict": {
+                    "type": "object", 
+                    "description": "输出分割所消耗的时间。格式：{'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0}}。",
+                    "properties": {
+                        "preprocess": {
+                            "type": "number",
+                            "description": "预处理耗时。",
+                            "minimum": 0.0
+                        },
+                        "inference": {
+                            "type": "number",
+                            "description": "模型推断耗时。",
+                            "minimum": 0.0
+                        },
+                        "postprocess": {
+                            "type": "number",
+                            "description": "后处理耗时。",
+                            "minimum": 0.0
+                        }
+                    }
+                }
+            },
+            "required":["image_path_list","predict_img_list","boxes_list","mask_list","classes_name_dict","predict_speeds_dict"]
+        }
+    },
+    
+    
+
+    {
+        "name": "classification",
+        "description": "对单张或一组图片进行分类，确定每张图片是否包含查询物体类别。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path_list": {
+                    "description": "输入图片的路径或路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "images",
+                    "require_version": false
+                },
+                "query_list": {
+                    "description": "待分类的物体类别字符串或类别列表。举例：['people','car',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "keywords",
+                    "require_version": false
+                },
+                "method": {
+                    "type": "string",
+                    "description": "使用的具体分类方法。",
+                    "default": "yolo_world",
+                    "require_version": true
+                },
+                "confidence_threshold": {
+                    "type": "number",
+                    "description": "用于筛选边界框的信心值阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "require_version": true
+                },
+                "iou_threshold": {
+                    "type": "number",
+                    "description": "用于筛选边界框的交并比阈值。",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
+                    "require_version": true
+                },
+                "classes": {
+                    "type": "array",
+                    "description": "待分类的物体类别的数字列表替代。举例：['people','car',...]。举例：[0,1,...]。对应'query_list'，可以不写。",
+                    "items": {"type": "integer"},
+                    "require_version": true
+                }
+                
+            },
+            "required":["image_path_list","query_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "image_path_list": {
+                    "type": "array", 
+                    "description": "待分类图片的路径列表。格式：[image1.jpg,...]。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "classes_name_dict": {
+                    "type": "object", 
+                    "description": "输出分类后所有图片的类别信息。格式：{类别编号:类别字串,...}。",
+                    "component_type": "images_list"
+                },
+                "predict_speeds_dict": {
+                    "type": "object", 
+                    "description": "输出分类所消耗的时间。格式：{'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0}}。",
+                    "properties": {
+                        "preprocess": {
+                            "type": "number",
+                            "description": "预处理耗时。",
+                            "minimum": 0.0
+                        },
+                        "inference": {
+                            "type": "number",
+                            "description": "模型推断耗时。",
+                            "minimum": 0.0
+                        },
+                        "postprocess": {
+                            "type": "number",
+                            "description": "后处理耗时。",
+                            "minimum": 0.0
+                        }
+                    }
+                }
+            },
+            "required":["image_path_list","classes_name_dict","predict_speeds_dict"]
+        }
+    },
+
+
+
+    {
+        "name": "counting",
+        "description": "对单张或一组图片进行计数，确定每张图片针对查询物体类别的计数，以及针对所有图片的总数和平均数。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path_list": {
+                    "description": "输入图片的路径或路径列表。举例：['image1.jpg','image2.jpg',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "images",
+                    "require_version": false
+                },
+                "query_list": {
+                    "description": "待计数的物体类别列表。举例：['people','car',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "keywords",
+                    "require_version": false
+                }
+            },
+            "required":["image_path_list","query_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{ 
+                "image_path_list": {
+                    "type": "array", 
+                    "description": "待计数图片的路径列表。举例：[image1.jpg,...]。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "predict_img_list": {
+                    "type": "array", 
+                    "description": "计数后图片的路径列表。举例：[detected_image1.jpg,...]。",
+                    "items": {"type": "string"},
+                    "component_type": "images"
+                },
+                "counting": {
+                    "type": "array", 
+                    "description": "输出计数后每张图片的计数信息。举例：[{'class1': 25, 'class2': 6, ...},...]",
+                    "items": {
+                        "oneOf":[
+                            {"type": "array", "items": {"type": "object"}},
+                            {"type": "array", "maxItems":0}
+                        ]
+                    }
+                },
+                "counting_sum": {
+                    "type": "object", 
+                    "description": "输出计数后所有图片的总和计数信息。举例：{'class1': 25, 'class2': 7, ...}",
+                    "component_type": "textareas"
+                },
+                "counting_avg": {
+                    "type": "object", 
+                    "description": "输出计数后所有图片的平均计数信息（除不尽的保留小数点后3位）。举例：{'class1': 3.132, 'class2': 5.0, ...}",
+                    "component_type": "textareas"
+                }
+            },
+            "required":["image_path_list","predict_img_list","counting","counting_sum","counting_avg"]
+        }
+    },
+
+
+
+    {
+        "name": "tracking",
+        "description": "对视频进行物体追踪，找到一类或多类物体的BBox移动轨迹。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "video_path": {
+                    "description": "输入待追踪的视频路径。",
+                    "type": "string",
+                    "component_type": "video",
+                    "require_version": false
+                },
+                "query_list": {
+                    "description": "待追踪的物体类别列表。举例：['people','car',...]。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "component_type": "keywords",
+                    "require_version": false
+                }   
+            },
+            "required":["video_path","query_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "image_path_list": {
+                    "type": "array", 
+                    "description": "追踪处理前的单个原始视频转换为图片的路径列表，视频格式不定。举例：['video1.jpg']。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "predict_img_list": {
+                    "type": "array", 
+                    "description": "追踪处理后的单个原始视频转换为图片的路径列表。举例：['tracked_video1.jpg']。", 
+                    "items": {"type": "string"}
+                },
+                "predict_video": {
+                    "component_type": "video",
+                    "type": "string", 
+                    "description": "追踪处理后的视频路径。"
+                },
+                "classes_name_dict": {
+                    "type": "object", 
+                    "description": "追踪过程中每帧图片的类别信息。格式：{类别编号:类别字串,...}。"
+                },
+                "boxes_list": {
+                    "type": "array", 
+                    "description": "追踪过程中每帧图片的BBox信息。格式：[[[左上角横坐标, 左上角纵坐标, 右下角横坐标, 右下角纵坐标, 信心值, 类别],...],...]。",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf":[
+                                {"type": "array", "maxItems": 0},
+                                {"type": "array", "prefixItems":[{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "string"}]}
+                            ]
+                        }
+                    }   
+                },
+                "predict_speeds_dict": {
+                    "type": "object", 
+                    "description": "输出分类所消耗的时间。格式：{'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0}}。",
+                    "properties": {
+                        "preprocess": {
+                            "type": "number",
+                            "description": "预处理耗时。",
+                            "minimum": 0.0
+                        },
+                        "inference": {
+                            "type": "number",
+                            "description": "模型推断耗时。",
+                            "minimum": 0.0
+                        },
+                        "postprocess": {
+                            "type": "number",
+                            "description": "后处理耗时。",
+                            "minimum": 0.0
+                        }
+                    }
+                }
+            },
+            "required":["image_path_list","predict_img_list","classes_name_dict","boxes_list","predict_speeds_dict"]
+        }
+    },
+
+
+
+    {
+        "name": "pose",
+        "description": "对视频进行人体姿态追踪，找到人体位置、骨骼姿态点追踪。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "video_path": {
+                    "description": "输入视频的路径。",
+                    "type": "string",
+                    "require_version": false
+                }
+            },
+            "component_type": "video",
+            "required":["video_path"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "image_path_list": {
+                    "type": "array", 
+                    "description": "待追踪的视频转换为图片的路径列表。举例：['video1.jpg']。", 
+                    "items": {"type": "string"},
+                    "minItems": 1
+                },
+                "predict_img_list": {
+                    "type": "array", 
+                    "description": "追踪处理后视频转换为图片的路径列表。举例：['dealed_video1.jpg']。", 
+                    "items": {"type": "string"}
+                },
+                "predict_video": {
+                    "component_type": "video",
+                    "type": "string", 
+                    "description": "追踪处理后的视频路径。"
+                },
+                "classes_name_dict": {
+                    "type": "object", 
+                    "description": "追踪过程中每帧图片的类别信息。格式：{类别编号:类别字串,...}。"
+                },
+                "boxes_list": {
+                    "type": "array", 
+                    "description": "追踪过程中每帧图片的BBox信息。格式：[[[左上角横坐标, 左上角纵坐标, 右下角横坐标, 右下角纵坐标, 信心值, 类别],...],...]。",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "oneOf":[
+                                {"type": "array", "maxItems": 0},
+                                {"type": "array", "prefixItems":[{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "string"}]}
+                            ]
+                        }
+                    }  
+                },
+                "predict_speeds_dict": {
+                    "type": "object", 
+                    "description": "输出追踪所消耗的时间。格式：{'preprocess': 0.0, 'inference': 0.0, 'postprocess': 0.0}}。",
+                    "properties": {
+                        "preprocess": {
+                            "type": "number",
+                            "description": "预处理耗时。",
+                            "minimum": 0.0
+                        },
+                        "inference": {
+                            "type": "number",
+                            "description": "模型推断耗时。",
+                            "minimum": 0.0
+                        },
+                        "postprocess": {
+                            "type": "number",
+                            "description": "后处理耗时。",
+                            "minimum": 0.0
+                        }
+                    }
+                }
+            },
+            "required":["image_path_list","predict_img_list","classes_name_dict","boxes_list","predict_speeds_dict"]
+        }
+    },
+
+
+
+    {
+        "name": "optical_flow",
+        "description": "对视频进行光流场探测，返回光流场视频。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "video_path": {
+                    "description": "输入视频的路径。",
+                    "type": "string",
+                    "component_type": "video",
+                    "require_version": false
+                }
+            },
+            "required":["video_path"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "predict_video":{
+                    "type": "string",
+                    "description": "光流场处理后的视频。",
+                    "component_type": "video"
+                }
+            },
+            "required":["predict_video"]
+        }
+    },
+
+    {
+        "name": "ocr",
+        "description": "对整张图片或指定区域进行光学字符识别，返回文本内容。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path_list": {
+                    "description": "输入图片的路径或者路径列表。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array", "items": {"type": "string"}}
+                    ],
+                    "require_version": false
+                },
+                "bbox_region": {
+                    "description": "bbox集合，可以是3维列表或2维列表。格式[(x1,y1,x2,y2),...]",
+                    "type": "array",
+                    "require_version": true,
+                    "items": {
+                        "anyOf":[
+                            {
+                                "type": "array",
+                                "items": {
+                                    "oneOf":[
+                                        {"type": "array", "maxItems": 0},
+                                        {"type": "array", "prefixItems":[{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "string"}]},
+                                        {"type": "array", "items":{"type": "string"}}
+                                    ]
+                                }
+                            },
+                            {"type": "array", "maxItems": 0},
+                            {"type": "array", "prefixItems":[{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "number"},{"type": "string"}]},
+                            {"type": "array", "items":{"type": "string"}}
+                        ]
+                        
+                    }
+                },
+                "ocr_threshold": {
+                    "description": "OCR识别阈值。",
+                    "type": "string",
+                    "default": 0.8,
+                    "component_type": "textarea",
+                    "require_version": true
+                }
+            },
+            "required":["image_path_list"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "ocr_result":{
+                    "type": "array",
+                    "description": "图片列表识别后的文本内容。",
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "string"}
+                    }
+                }
+            },
+            "required":["ocr_result"]
+        }
+    },
+
+    {
+        "name": "vlm",
+        "description": "对图片进行多模态大模型提问，返回回答文本。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "image_path": {
+                    "description": "输入图片的路径。",
+                    "type": "string",
+                    "component_type": "image",
+                    "require_version": false
+                },
+                "query": {
+                    "description": "针对图片提出的问题（可以是字符串或者是一个待拼接的列表）。",
+                    "component_type": "smart_textarea",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array"}
+                    ],
+                    "require_version": false
+                }
+            },
+            "required":["image_path","query"]
+        },
+        
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "vlm_result": {
+                    "type": "string", 
+                    "description": "多模态大模型返回的回答。",
+                    "component_type": "textarea"
+                }
+            },
+            "required":["vlm_result"]
+        } 
+    },
+
+
+    {
+        "name": "llm",
+        "description": "对大语言模型提问，返回回答文本。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "query": {
+                    "description": "输入大语言模型的问题（可以是字符串或者是一个待拼接的列表）。",
+                    "oneOf":[
+                        {"type": "string"},
+                        {"type": "array"}
+                    ],
+                    "component_type": "smart_textarea",
+                    "require_version": false
+                }
+            },
+            "required":["query"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "llm_result":{
+                    "type": "string",
+                    "description": "大语言模型返回的回答。",
+                    "component_type": "textarea"
+                }
+            },
+            "required":["llm_result"]
+        }
+    },
+
+
+
+    {
+        "name": "alarm",
+        "description": "对整张图片或指定区域进行报警，可以直接展示、发送Email或短信。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "result_obj": {
+                    "description": "之前步骤的结果列表。",
+                    "type": "object",
+                    "require_version": false,
+                    "properties":{
+                        "image_path_list":{"type": "array"},
+                        "boxes_list":{"type": "array"}
+                    }
+                },
+                "detect_class": {
+                    "description": "需要检测的物体类别列表。举例：['people','car',...]。",
+                    "type": "array",
+                    "require_version": false
+                },
+                "detect_method": {
+                    "description": "检测方法。",
+                    "type": "string",
+                    "enum": ["appear", "disappear"],
+                    "default": "appear",
+                    "require_version": false
+                },
+                "notice_email_or_tel": {
+                    "description": "通知方法，可以是邮箱地址或者手机号码。",
+                    "type": "string",
+                    "require_version": false
+                },
+                "alarm_threshold": {
+                    "description": "报警阈值。",
+                    "type": "integer",
+                    "require_version": false
+                }
+            },
+            "required":["result_obj", "detect_class"]
+        },
+        "outputs": {
+            "type": "object", 
+            "properties":{
+                "is_alarm":{
+                    "type": "integer",
+                    "description": "是否触发报警。"
+                },
+                "alarm_str":{
+                    "type": "string",
+                    "enum": ["触发警报", "未触发警报"],
+                    "description": "描述是否触发警报。",
+                    "component_type": "textarea"
+                },
+                "detect_method":{
+                    "type": "string",
+                    "enum": ["appear", "disappear"],
+                    "description": "检测方法。"
+                },
+                "alarm_method":{
+                    "type": "string", 
+                    "enum": ["show", "email", "sms"],
+                    "description": "报警方法。"
+                },
+                "is_alarm_success":{
+                    "type": "boolean",
+                    "description": "报警是否成功。",
+                    "component_type": "switch"
+                },
+                "alarm_image_list":{
+                    "type": "array",
+                    "description": "触发警报的图片列表。",
+                    "component_type": "images"
+                }
+            },
+            "required":["is_alarm", "alarm_str", "detect_method","alarm_method","is_alarm_success","alarm_image_list"]
+        }
+    },
+
+
+
+    {
+        "name": "output",
+        "description": "对结果进行输出，可以展示、写入日志或压缩相关文件。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "result_obj": {
+                    "description": "之前步骤的结果。",
+                    "require_version": false
+                },
+                "method": {
+                    "description": "展示方法。",
+                    "type": "string",
+                    "enum": ["show", "write","zip"],
+                    "default": "show",
+                    "require_version": false
+                }
+            },
+            "required":["result_obj"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "output":{
+                    "type": "string",
+                    "description": "直接描述的输出结果。"
+                },
+                "output_path":{
+                    "type": "string",
+                    "description": "写入日志的本地路径。"
+                },
+                "zip_path":{
+                    "type": "string",
+                    "description": "压缩相关文件的本地路径。"
+                }
+            }
+        }
+    },
+
+
+
+    {
+        "name": "videoprecess",
+        "description": "对视频或视频流进行预处理，包括抽帧，得到帧列表，方便之后其它仅支持图片列表的组件处理。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "method": {
+                    "description": "选择功能。get_frames为视频抽帧，rtmp_capturer为rtmp视频流限时抽帧。",
+                    "type": "string",
+                    "enum": ["get_frames", "rtmp_capturer"],
+                    "default": "get_frames",
+                    "require_version": false
+                },
+                "video_path": {
+                    "description": "视频原地址。",
+                    "type": "string",
+                    "require_version": false
+                },
+                "rtmp_url": {
+                    "description": "rtmp视频流url地址。",
+                    "type": "string",
+                    "require_version": false
+                },
+                "interval": {
+                    "description": "抽帧间隔。（单位：秒）",
+                    "type": "integer",
+                    "default": 1,
+                    "require_version": false
+                },
+                "rtmp_duration": {
+                    "description": "rtmp视频流采样总时长。（单位：秒）",
+                    "type": "integer",
+                    "default": 10,
+                    "require_version": false
+                }
+            },
+            "required":["method"]
+        },
+        "outputs": {
+            "type": "object",
+            "properties":{
+                "processed_path_list":{
+                    "type": "array",
+                    "description": "抽帧后或rtmp视频流采样后的图片列表。",
+                    "items": {"type":"string"},
+                    "component_type": "images"
+                }
+            },
+            "required":["processed_path_list"]
+        }
+    }
+]
