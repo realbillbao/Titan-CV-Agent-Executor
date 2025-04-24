@@ -116,8 +116,7 @@ pip install requests==2.32.3
 pip install beautifulsoup4==4.12.3
 pip install ultralytics==8.2.87
 pip install "flask[async]"
-
-# 2. Environment parameter settings. All environment variables are valid only for the current terminal session. Please consider writing them to ~/.bashrc for permanent effect.
+# Environment parameter settings. All environment variables are valid only for the current terminal session. Please consider writing them to ~/.bashrc for permanent effect.
 # EXECUTOR working directory
 EXECUTOR_ROOT={YOUR_EXECUTOR_PATH}
 # Reserved field of LLM Planner. For example, when training the planner, the output address is fixed, such as /output or os.getenv to obtain the environment variable. The actual address can be written here for replacement.
@@ -136,8 +135,7 @@ DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
 DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
 # Default video stream replacement list
 DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
-
-# 3. Startup Flask
+# Startup Flask
 python executor/cv_agent_quick_executer_api.py
 ```
 
@@ -151,8 +149,6 @@ pip install requests==2.32.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install beautifulsoup4==4.12.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install ultralytics==8.2.87 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install "flask[async]"
-
-
 EXECUTOR_ROOT=/datacanvas/titan_cv_agent_executor
 RESERVED_PATH=/datacanvas/output/
 ACCESS_KEY=sk-******
@@ -162,7 +158,6 @@ EXECUTOR_OUTPUT_DIR=/datacanvas/output/
 DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
 DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
 DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
-
 python executor/cv_agent_quick_executer_api.py
 ```
 
@@ -372,14 +367,14 @@ For example, there is the following query list request:
 
 We found that it only generated requirements, but lacks corresponding media inputs, such as images or videos, and there was no complete Workflow to explain what each Step does, so for us, the following process is needed:
 
-**STEP1: Generate a solution (workflow) according to each natural language requirement description ("query")**
+**STEP 1: Generate a solution (workflow) according to each natural language requirement description ("query")**
 
-```json
+```
 "query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行物体追踪，找到特定车辆的BBox移动轨迹。\", \"function\": \"tracking\", \"input\": {\"video_path\": \"<|input_step_1.video_path|>\", \"query_list\": [\"car\"]}}, {\"step\": \"对追踪到的车辆进行车牌识别。\", \"function\": \"ocr\", \"input\": {\"image_path_list\": \"<|output_step_1.predict_img_list|>\", \"bbox_region\": \"<|output_step_1.boxes_list|>\"}}, {\"step\": \"对识别到的车牌信息进行处理，提取出车牌号码。\", \"function\": \"extract_license_plate_numbers\", \"input\": {\"ocr_results\": \"<|output_step_2.ocr_result|>\"}}, {\"step\": \"输出最终的车辆追踪结果和车牌号码。\", \"function\": \"output\", \"input\": {\"result_obj\": {\"output\": \"<|output_step_3.license_plate_numbers|>\", \"output_path\": \"/workspace/baohan/code/agent_series/agent_new/output/vehicle_tracking_result.txt\", \"zip_path\": \"/workspace/baohan/code/agent_series/agent_new/output/vehicle_tracking_result.zip\"}}}], 
 "adapter_function": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers(ocr_results):\\n    license_plate_numbers = []\\n    for result in ocr_results:\\n        for text in result:\\n            if len(text) >= 7 and text.isalnum():\\n                license_plate_numbers.append(text)\\n    return {\\\"license_plate_numbers\\\": license_plate_numbers}\"}}</AGENT_PIPELINE>"
 ```
 
-**STEP2: Download the real media (images/videos) and replace the input placeholders <|input_step_... in the workflow with the address of the real media. **
+**STEP 2: Download the real media (images/videos) and replace the input placeholders <|input_step_... in the workflow with the address of the real media. **
 
 We observed that the entire workflow does not contain the "media" field, and the "<|input_step_1.video_path|>" recorded in "pipeline.step" requires user input in the real scene, but we do not have the corresponding appropriate media, so we need to retrieve the relevant images (IMAGE_SEARCH_URL parameter in the configuration), automatically search for images and stitch them into a video (if video input is required), and replace all input placeholders with images or videos actually saved locally.
 
