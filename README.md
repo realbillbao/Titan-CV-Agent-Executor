@@ -393,7 +393,7 @@ We observed that the entire workflow does not contain the "media" field, and the
 "adapter_function": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers(ocr_results):\\n    license_plate_numbers = []\\n    for result in ocr_results:\\n        for text in result:\\n            if len(text) >= 7 and text.isalnum():\\n                license_plate_numbers.append(text)\\n    return {\\\"license_plate_numbers\\\": license_plate_numbers}\"}}</AGENT_PIPELINE>"
 ```
 
-**STEP3: Get the real workflow to execute, get the corresponding results and return. **
+**STEP3: Get the real workflow to execute, get the corresponding results and return.**
 
 The three available reasoning modes are:
 
