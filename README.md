@@ -64,7 +64,7 @@ LLM Response Preprocess - Filtering: Conduct preliminary filtering on the output
 
 LLM Response Preprocess - Deserialize: Try to deserialize the string output by LLM into a usable data format. Resolve Step Input / Output.
 
-LLM Response Preprocess - Json Repair: When JSON is incomplete or has a few syntax errors, you can try to repair it.
+LLM Response Preprocess - JSON Repair: When JSON is incomplete or has a few syntax errors, you can try to repair it.
 
 From then on, we got a relatively clean workflow plan that can be used directly as a Workflow.
 
@@ -116,7 +116,7 @@ In summary, the executor uses LLM to generate a complete workflow management pro
 
 ```bash
 # Create a conda environment. Ensure Conda or Miniconda is installed beforehand.
-conda create -p {YOUR_SANDBOX_ENVIRONMENT_PATH} python==3.10.0 -y
+conda create -p {YOUR_EXECUTOR_ENVIRONMENT_PATH} python==3.10.0 -y
 # Activate the created EXECUTOR environment
 conda activate {YOUR_EXECUTOR_ENVIRONMENT_PATH}
 # Go to the EXECUTOR working directory
@@ -128,23 +128,23 @@ pip install ultralytics==8.2.87
 pip install "flask[async]"
 # Environment parameter settings. All environment variables are valid only for the current terminal session. Please consider writing them to ~/.bashrc for permanent effect.
 # EXECUTOR working directory
-EXECUTOR_ROOT={YOUR_EXECUTOR_PATH}
+export EXECUTOR_ROOT={YOUR_EXECUTOR_PATH}
 # Reserved field of LLM Planner. For example, when training the planner, the output address is fixed, such as /output or os.getenv to obtain the environment variable. The actual address can be written here for replacement.
-RESERVED_PATH={YOUR_EXECUTOR_PATH}/workspace/baohan/code/agent_series/agent_new/output/
+export RESERVED_PATH={YOUR_RESERVED_PATH}
 # If the call of LLM/VLM Planner requires authentication, please enter the key. If no authentication is required, do not set it.
-ACCESS_KEY=sk-******
+export ACCESS_KEY=sk-******
 # Planner address, generate LLM/VLM of CV solution
-PLANNER_LLM_URL=https://api.siliconflow.cn/v1/chat/completions
+export PLANNER_LLM_URL={YOUR_PLANNER_LLM_URL}
 # The actual address of calling Sandbox
-CALL_FUNCTION_URL=http://titan-cv-agent-opensource-sandbox-service.develop:52001/call_function
+export CALL_FUNCTION_URL={YOUR_CALL_FUNCTION_URL}
 # The output address of EXECUTOR (such as processed images and videos)
-EXECUTOR_OUTPUT_DIR=/models/baohan/opensource/output/
+export EXECUTOR_OUTPUT_DIR={YOUR_EXECUTOR_OUTPUT_DIR}
 # Default image replacement list
-DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
+export DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
 # Default video replacement list
-DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
+export DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
 # Default video stream replacement list
-DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
+export DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
 # Startup Flask
 python executor/cv_agent_quick_executer_api.py
 ```
@@ -154,20 +154,23 @@ python executor/cv_agent_quick_executer_api.py
 #### Installation Examples
 
 ```bash
+conda create -p /datacanvas/envs/titan_cv_agent_executor python==3.10.0 -y
+conda activate /datacanvas/envs/titan_cv_agent_executor
+cd /datacanvas/titan_cv_agent_executor
 pip install Flask==3.0.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install requests==2.32.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install beautifulsoup4==4.12.3 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install ultralytics==8.2.87 -i https://pypi.tuna.tsinghua.edu.cn/simple
 pip install "flask[async]"
-EXECUTOR_ROOT=/datacanvas/titan_cv_agent_executor
-RESERVED_PATH=/datacanvas/output/
-ACCESS_KEY=sk-******
-PLANNER_LLM_URL=https://api.siliconflow.cn/v1/chat/completions
-CALL_FUNCTION_URL=http://sandbox-service:12345/call_function
-EXECUTOR_OUTPUT_DIR=/datacanvas/output/
-DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
-DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
-DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
+export EXECUTOR_ROOT=/datacanvas/titan_cv_agent_executor
+export RESERVED_PATH=/datacanvas/output/
+export ACCESS_KEY=sk-******
+export PLANNER_LLM_URL=https://api.siliconflow.cn/v1/chat/completions
+export CALL_FUNCTION_URL=http://sandbox-service:12345/call_function
+export EXECUTOR_OUTPUT_DIR=/datacanvas/output/
+export DEFAULT_IMAGE_LIST=["/datacanvas/data/images/road.jpg"]
+export DEFAULT_VIDEO_PATH=/datacanvas/data/videos/cv_demo_short.mp4
+export DEFAULT_RTMP_PATH=/datacanvas/data/videos/cv_demo_short.mp4
 python executor/cv_agent_quick_executer_api.py
 ```
 
@@ -194,7 +197,7 @@ titan_cv_agent_executor/ #Working directory, which can be the specified location
 
 ```bash
 # Root directory of the executor
-EXECUTOR_ROOT = "/workspace/baohan/code/agent_series/opensource/titan_cv_agent_executor"
+EXECUTOR_ROOT = "/datacanvas/titan_cv_agent_executor"
 # If the call of LLM/VLM Planner requires authentication, ACCESS_KEY is required
 ACCESS_KEY = ""
 # The name of the call model of LLM/VLM Planner.
@@ -223,11 +226,8 @@ IMAGE_SEARCH_URL = "https://www.bing.com/images/search"
 BASE_FUNCTION_SCHEMA_PATH = "{EXECUTOR_ROOT}exist_func_def.json"
 # Define the name of the base function. If the called function is not in the following list, we consider it an adaptive skill and will write code on the spot.
 BASE_FUNCTIONS = ["preprocess","postprocess","detection","segmentation","classification","counting","tracking","pose","optical_flow","ocr","vlm","llm","alarm","output","videoprecess"]
-
 # Here is the prompt to get the plan from LLM/VLM (see plan prompt for details)
-
-GET_PLAN_QUERY_PREFIX = os.getenv("GET_PLAN_QUERY_PREFIX", )
-
+GET_PLAN_QUERY_PREFIX = "..."
 # Detected the replacement variable for the image in the plan
 DEFAULT_IMAGE_LIST = "sample.jpg"
 # Detected the replacement variable for the video in the plan
@@ -251,7 +251,7 @@ DEFAULT_CONF = 0.5
 #### Plan Prompt
 
 ```python
-"""你是一个计算机视觉专家，可以通过多步骤串联完成一个较为复杂的计算机视觉任务。【function schema】描述了我们有的各项已经具备的、计算机视觉基础的【base function】，以及它们的输入、输出参数情况。 现在请你根据【任务需求】【function schema】串联完成计算机视觉任务，你需要创造必要的【adapter function】以完成【base function】之间的类型、格式转换或实现我们尚未具备的功能，同时需要写出其具体的可运行的python代码，以确保各步骤可以顺利的串联执行。 完成任务时请遵守以下约定： 1. 如果使用【base function】请严格遵守【function schema】的输出，不要创造不存在的输出变量。 2. 不要任何解释和说明。 3. 如果有输出，所有文件请保存到os.getenv('AGENT_OUTPUT_DIR')。  4.请严格遵循用户输入输出格式，需要输入时使用<|input_step_x.xxx|>占位，需要使用之前step的输出则使用<|input_step_x.xxx|>占位(x是当前step，xxx是需要的变量名称)，不能使用其它格式。 5.query_list所有项必须是英文。以下是一个例子： 【任务需求开始】 请制作一个人群密集分析agent，通过无人机拍摄的照片进行分析，判断照片中桥上的人群是否密集，需支持密集判定阈值输入。 【任务需求结束】 {\"pipeline\": [{\"step\": \"检测桥并获取检测结果。\", \"function\": \"detection\", \"input\": {\"image_path_list\": \"<|input_step_1.image_path_list|>\", \"query_list\": [\"bridge\"]}}, {\"step\": \"处理边界框信息，删除每个边界框最后的信心值和类别信息，返回仅包含边界框坐标的列表。\", \"function\": \"get_pure_bbox_list\", \"input\": {\"raw_bbox_data\": \"<|output_step_1.boxes_list|>\"}}, {\"step\": \"按照所有边界框给定的坐标进行裁切，仅保留需要识别的区域，返回切片后的图片路径列表。\", \"function\": \"batch_crop_images\", \"input\": {\"image_path_list\": \"<|output_step_1.image_path_list|>\", \"crop_bboxes\": \"<|output_step_2.pure_bbox_list|>\"}}, {\"step\": \"对区域中的人群进行数量统计。\", \"function\": \"counting\", \"input\": {\"image_path_list\": \"<|output_step_3.all_croped_image|>\", \"query_list\": [\"people\"]}}, {\"step\": \"判断照片中桥上的人群是否密集。\", \"function\": \"llm\", \"input\": {\"query\": [\"你是一个专业的环境状态报告员，需要告诉用户所处环境人员是否密集？（密集判断标准是:\", \"<|input_step_5.threshold|>\", \"）实际统计结果:\", \"<|output_step_4.counting_sum|>\", \"请你依据上述信息向用户报告。\"]}}], \"adapter_function\": {\"get_pure_bbox_list.py\": \"def get_pure_bbox_list(raw_bbox_data):\\n    all_bbox = []\\n    for single_image in raw_bbox_data:\\n        single_image_bbox = []\\n        for bbox in single_image:\\n            single_image_bbox.append(bbox[:4])\\n        all_bbox.append(single_image_bbox)\\n    return {\\\"pure_bbox_list\\\":all_bbox}\", \"batch_crop_images.py\": \"import cv2\\nimport uuid \\n\\ndef batch_crop_images(image_path_list, crop_bboxes):\\n    all_croped_image = []\\n    src = None\\n    for idx, single_image in enumerate(image_path_list):\\n        single_image_crop_bboxes = crop_bboxes[idx]\\n        if single_image_crop_bboxes is not None:\\n            for bbox in single_image_crop_bboxes:\\n                src = cv2.imread(single_image)\\n                src = src[int(float(bbox[1])):int(float(bbox[3])),int(float(bbox[0])):int(float(bbox[2]))]\\n                if src is not None:\\n                    croped_image_path = \\\"/workspace/baohan/code/agent_series/agent_new/output/\\\"+str(uuid.uuid4()) + \\\".jpg\\\"\\n                    if src is not None:\\n                        cv2.imwrite(croped_image_path, src)\\n                        all_croped_image.append(croped_image_path)\\n    print(all_croped_image)\\n    return {\\\"all_croped_image\\\" : all_croped_image}\"}} 下面开始执行任务："""
+"""你是一个计算机视觉专家，可以通过多步骤串联完成一个较为复杂的计算机视觉任务。【function schema】描述了我们有的各项已经具备的、计算机视觉基础的【base function】，以及它们的输入、输出参数情况。 现在请你根据【任务需求】【function schema】串联完成计算机视觉任务，你需要创造必要的【adapter function】以完成【base function】之间的类型、格式转换或实现我们尚未具备的功能，同时需要写出其具体的可运行的python代码，以确保各步骤可以顺利的串联执行。 完成任务时请遵守以下约定： 1. 如果使用【base function】请严格遵守【function schema】的输出，不要创造不存在的输出变量。 2. 不要任何解释和说明。 3. 如果有输出，所有文件请保存到os.getenv('AGENT_OUTPUT_DIR')。  4.请严格遵循用户输入输出格式，需要输入时使用<|input_step_x.xxx|>占位，需要使用之前step的输出则使用<|input_step_x.xxx|>占位(x是当前step，xxx是需要的变量名称)，不能使用其它格式。 5.query_list所有项必须是英文。以下是一个例子： 【任务需求开始】 请制作一个人群密集分析agent，通过无人机拍摄的照片进行分析，判断照片中桥上的人群是否密集，需支持密集判定阈值输入。 【任务需求结束】 {\"pipeline\": [{\"step\": \"检测桥并获取检测结果。\", \"function\": \"detection\", \"input\": {\"image_path_list\": \"<|input_step_1.image_path_list|>\", \"query_list\": [\"bridge\"]}}, {\"step\": \"处理边界框信息，删除每个边界框最后的信心值和类别信息，返回仅包含边界框坐标的列表。\", \"function\": \"get_pure_bbox_list\", \"input\": {\"raw_bbox_data\": \"<|output_step_1.boxes_list|>\"}}, {\"step\": \"按照所有边界框给定的坐标进行裁切，仅保留需要识别的区域，返回切片后的图片路径列表。\", \"function\": \"batch_crop_images\", \"input\": {\"image_path_list\": \"<|output_step_1.image_path_list|>\", \"crop_bboxes\": \"<|output_step_2.pure_bbox_list|>\"}}, {\"step\": \"对区域中的人群进行数量统计。\", \"function\": \"counting\", \"input\": {\"image_path_list\": \"<|output_step_3.all_croped_image|>\", \"query_list\": [\"people\"]}}, {\"step\": \"判断照片中桥上的人群是否密集。\", \"function\": \"llm\", \"input\": {\"query\": [\"你是一个专业的环境状态报告员，需要告诉用户所处环境人员是否密集？（密集判断标准是:\", \"<|input_step_5.threshold|>\", \"）实际统计结果:\", \"<|output_step_4.counting_sum|>\", \"请你依据上述信息向用户报告。\"]}}], \"adapter_function\": {\"get_pure_bbox_list.py\": \"def get_pure_bbox_list(raw_bbox_data):\\n    all_bbox = []\\n    for single_image in raw_bbox_data:\\n        single_image_bbox = []\\n        for bbox in single_image:\\n            single_image_bbox.append(bbox[:4])\\n        all_bbox.append(single_image_bbox)\\n    return {\\\"pure_bbox_list\\\":all_bbox}\", \"batch_crop_images.py\": \"import cv2\\nimport uuid \\n\\ndef batch_crop_images(image_path_list, crop_bboxes):\\n    all_croped_image = []\\n    src = None\\n    for idx, single_image in enumerate(image_path_list):\\n        single_image_crop_bboxes = crop_bboxes[idx]\\n        if single_image_crop_bboxes is not None:\\n            for bbox in single_image_crop_bboxes:\\n                src = cv2.imread(single_image)\\n                src = src[int(float(bbox[1])):int(float(bbox[3])),int(float(bbox[0])):int(float(bbox[2]))]\\n                if src is not None:\\n                    croped_image_path = \\os.getenv('AGENT_OUTPUT_DIR')\\+str(uuid.uuid4()) + \\\".jpg\\\"\\n                    if src is not None:\\n                        cv2.imwrite(croped_image_path, src)\\n                        all_croped_image.append(croped_image_path)\\n    print(all_croped_image)\\n    return {\\\"all_croped_image\\\" : all_croped_image}\"}} 下面开始执行任务："""
 ```
 
 
@@ -380,7 +380,7 @@ We found that it only generated requirements, but lacks corresponding media inpu
 **STEP 1: Generate a solution (workflow) according to each natural language requirement description ("query")**
 
 ```
-"query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行物体追踪，找到特定车辆的BBox移动轨迹。\", \"function\": \"tracking\", \"input\": {\"video_path\": \"<|input_step_1.video_path|>\", \"query_list\": [\"car\"]}}, {\"step\": \"对追踪到的车辆进行车牌识别。\", \"function\": \"ocr\", \"input\": {\"image_path_list\": \"<|output_step_1.predict_img_list|>\", \"bbox_region\": \"<|output_step_1.boxes_list|>\"}}, {\"step\": \"对识别到的车牌信息进行处理，提取出车牌号码。\", \"function\": \"extract_license_plate_numbers\", \"input\": {\"ocr_results\": \"<|output_step_2.ocr_result|>\"}}, {\"step\": \"输出最终的车辆追踪结果和车牌号码。\", \"function\": \"output\", \"input\": {\"result_obj\": {\"output\": \"<|output_step_3.license_plate_numbers|>\", \"output_path\": \"/workspace/baohan/code/agent_series/agent_new/output/vehicle_tracking_result.txt\", \"zip_path\": \"/workspace/baohan/code/agent_series/agent_new/output/vehicle_tracking_result.zip\"}}}], 
+"query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行物体追踪，找到特定车辆的BBox移动轨迹。\", \"function\": \"tracking\", \"input\": {\"video_path\": \"<|input_step_1.video_path|>\", \"query_list\": [\"car\"]}}, {\"step\": \"对追踪到的车辆进行车牌识别。\", \"function\": \"ocr\", \"input\": {\"image_path_list\": \"<|output_step_1.predict_img_list|>\", \"bbox_region\": \"<|output_step_1.boxes_list|>\"}}, {\"step\": \"对识别到的车牌信息进行处理，提取出车牌号码。\", \"function\": \"extract_license_plate_numbers\", \"input\": {\"ocr_results\": \"<|output_step_2.ocr_result|>\"}}, {\"step\": \"输出最终的车辆追踪结果和车牌号码。\", \"function\": \"output\", \"input\": {\"result_obj\": {\"output\": \"<|output_step_3.license_plate_numbers|>\", \"output_path\": \"/datacanvas/output/vehicle_tracking_result.txt\", \"zip_path\": \"/datacanvas/output/vehicle_tracking_result.zip\"}}}], 
 "adapter_function": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers(ocr_results):\\n    license_plate_numbers = []\\n    for result in ocr_results:\\n        for text in result:\\n            if len(text) >= 7 and text.isalnum():\\n                license_plate_numbers.append(text)\\n    return {\\\"license_plate_numbers\\\": license_plate_numbers}\"}}</AGENT_PIPELINE>"
 ```
 
@@ -435,22 +435,22 @@ query_mode1=[
         "id": "t_1",
         "query":"我需要一个花朵分类的agent",
         "source": "test"
-    },...
+    }
 ]
 
 query_mode2=[
     {
         "id": "t_1",
-        "media":"/models/baohan/data/videos/cv_demo_short.mp4",
+        "media":"/datacanvas/videos/cv_demo_short.mp4",
         "query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行抽帧，得到帧列表。\", \"function\": \"videoprecess\", \"input\": {\"method\": \"get_frames\", \"video_path\": \"<|input_step_1.video_path|>\", \"interval\": 1}}, ...]}}], \"adapter_function\": {\"get_pure_bbox_list.py\": \"def get_pure_bbox_list(raw_bbox_data):\\n    all_bbox = []\\n...\"}}</AGENT_PIPELINE>",
         "source": "test"
-    },...
+    }
 ]
 
 query_mode3=[
     {
         "id": "t_2",
-        "query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行物体追踪，找到特定车辆的BBox移动轨迹。\", \"function\": \"tracking\", \"input\": {\"video_path\": \"/models/baohan/data/videos/cv_demo_short.mp4\", \"query_list\": [\"car\"]}}..."}}}], \"adapter_function\": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers...",
+        "query":"<AGENT_PIPELINE>{\"pipeline\": [{\"step\": \"对视频进行物体追踪，找到特定车辆的BBox移动轨迹。\", \"function\": \"tracking\", \"input\": {\"video_path\": \"/datacanvas/videos/cv_demo_short.mp4\", \"query_list\": [\"car\"]}}..."}}}], \"adapter_function\": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers...",
         "source": "test"
     }
 ]
@@ -461,7 +461,7 @@ The **"query"** field is a dictionary containing the following parameters:
 | **Parameter name** | **Type** | **required** | **describe**                                                 |
 | ------------------ | -------- | ------------ | ------------------------------------------------------------ |
 | **id**             | String   | Yes          | The ID of the query.                                         |
-| **media**          | int      | No           | Only supports mode=2, specify different media for each query. |
+| **media**          | Int      | No           | Only supports mode=2, specify different media for each query. |
 | **query**          | Dict     | Yes          | The query that matches the mode                              |
 | **source**         | String   | Yes          | The source of the query                                      |
 
