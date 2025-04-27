@@ -26,6 +26,16 @@ During the execution process, the Executor will parse the incoming instructions 
 
 
 
+## Titan CV Agent Series
+
+[Titan CV Agent Sandbox](https://github.com/DataCanvasAILab/Titan-CV-Agent-Sandbox)
+
+[Titan CV Agent Executor](https://github.com/DataCanvasAILab/Titan-CV-Agent-Executor)
+
+[Titan CV Agent Benchmark](https://github.com/DataCanvasAILab/Titan-CV-Agent-Benchmark)
+
+
+
 ## Architecture and Process
 
 ### Overall Architecture
@@ -68,7 +78,7 @@ After getting the execution plan, we will prepare the media and code that may be
 
 **Query movie maker**: Splice the images in the image list into a video, and its fps can be adjusted in advance. To adapt to the situation where some queries require video output.
 
-**Code Prepear**: Regarding the "adapter_function" part, execution preparation will be made in advance before the workflow is executed.
+**Code Prepare**: Regarding the "adapter_function" part, execution preparation will be made in advance before the workflow is executed.
 
 **Change Step Input**: If the input required by the current step is an image list, the workflow will replace it with a real local executable media path, and its path comes from the image or video downloaded or synthesized in the previous step. If it is not a media input, it will be preliminarily judged based on the parameter name and some default values will be entered (such as BBOX area, THRESHOLD threshold, etc.). If the input cannot be judged (starting with <|input_step... in the workflow), it will be replaced with a default placeholder will be used instead.
 
@@ -374,7 +384,7 @@ We found that it only generated requirements, but lacks corresponding media inpu
 "adapter_function": {\"extract_license_plate_numbers.py\": \"def extract_license_plate_numbers(ocr_results):\\n    license_plate_numbers = []\\n    for result in ocr_results:\\n        for text in result:\\n            if len(text) >= 7 and text.isalnum():\\n                license_plate_numbers.append(text)\\n    return {\\\"license_plate_numbers\\\": license_plate_numbers}\"}}</AGENT_PIPELINE>"
 ```
 
-**STEP 2: Download the real media (images/videos) and replace the input placeholders <|input_step_... in the workflow with the address of the real media. **
+**STEP 2: Download the real media (images/videos) and replace the input placeholders <|input_step_... in the workflow with the address of the real media.**
 
 We observed that the entire workflow does not contain the "media" field, and the "<|input_step_1.video_path|>" recorded in "pipeline.step" requires user input in the real scene, but we do not have the corresponding appropriate media, so we need to retrieve the relevant images (IMAGE_SEARCH_URL parameter in the configuration), automatically search for images and stitch them into a video (if video input is required), and replace all input placeholders with images or videos actually saved locally.
 
