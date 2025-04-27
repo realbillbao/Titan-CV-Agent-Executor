@@ -256,7 +256,7 @@ DEFAULT_CONF = 0.5
 
 
 
-### Docker & Kubernetes Installation
+### Kubernetes Installation
 
 **Kubernetes startup script**
 
