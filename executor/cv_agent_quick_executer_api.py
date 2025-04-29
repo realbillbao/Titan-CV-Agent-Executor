@@ -13,11 +13,11 @@ app = Flask(__name__)
 tasks = {}
 lock = threading.Lock()
 
-def execute_mode_switch(query, mode, expr_id, retry_limit, task_id):
+def execute_mode_switch(query, mode, expr_id, retry_limit, task_id, planner_args):
     try:
         with lock:
             tasks[task_id] = {"status": "running"}
-        result = mode_switch(query=query, mode=mode, expr_id=expr_id, retry_limit=retry_limit)
+        result = mode_switch(query=query, mode=mode, expr_id=expr_id, retry_limit=retry_limit, planner_args=planner_args)
         with lock:
             tasks[task_id] = {"status": "completed", "result": result}
     except Exception as e:
@@ -41,7 +41,14 @@ async def cv_agent_quick_execute():
 
     task_id = expr_id #str(uuid.uuid4())
 
-    thread = threading.Thread(target=execute_mode_switch, args=(query, mode, expr_id, retry_limit, task_id))
+    # self.planner_name = PLANNER_LLM_MODEL_NAME
+    # self.planner_url = PLANNER_LLM_URL
+    # self.sandbox_url = CALL_FUNCTION_URL
+    planner_args = data.get('planner_args')
+    # planner_args = {"planner_name":"","planner_url":"","sandbox_url":""}
+    ###########################
+
+    thread = threading.Thread(target=execute_mode_switch, args=(query, mode, expr_id, retry_limit, task_id, planner_args))
     thread.start()
     return jsonify({"task_id": task_id, "status": "started"}), 202
 

@@ -16,8 +16,8 @@ from ap_config import *
 from ap_error_message import *
 
 import logging
-from datetime import datetime
-now = datetime.now()
+import datetime
+now = datetime.datetime.now()
 time_rec = now.strftime('%Y%m%d%H%M%S')
 os.makedirs(LOG_PATH_PREFIX, exist_ok=True)
 logging.basicConfig(
@@ -32,9 +32,14 @@ logging.basicConfig(
 class AutoPipeline:
     def __init__(self):
             self.global_result_dict = {}
+            self.step_result = ""
             self.global_response_str = ""
             self.real_image_list = None
             self.real_video_path = ""
+            self.planner_name = ""
+            self.planner_url = ""
+            self.sandbox_url = ""
+            self.access_key = ""
 
     def timeout(self, seconds:int = TIMEOUT_SECONDS):
         def decorator(func):
@@ -61,12 +66,12 @@ class AutoPipeline:
         if url is None or data is None:
             raise ValueError(REQUEST_NONE_ERROR)
         try:
-            if ACCESS_KEY is not None and ACCESS_KEY!="" and is_call_fn is False:
+            if self.access_key is not None and self.access_key!="" and is_call_fn is False:
                 headers = {
                     "Content-Type": "application/json; charset=utf-8",
                     "Accept": "application/json",
                     "Accept-Charset": "utf-8",
-                    "Authorization": f"Bearer {ACCESS_KEY}"
+                    "Authorization": f"Bearer {self.access_key}"
                 }
             else:
                 headers = {
@@ -89,7 +94,7 @@ class AutoPipeline:
     def call_function(self, idx:int = 1, step:Dict = None):
         if step is None:
             raise ValueError(CALL_FUNCTION_NONE_ERROR)
-        step_result = self.get_response(CALL_FUNCTION_URL, step, True)
+        step_result = self.get_response(self.sandbox_url, step, True)
         step_code = step_result["code"]
         step_data = step_result["data"]
         
@@ -124,13 +129,13 @@ class AutoPipeline:
             messages += error_history
 
         request = {
-            "model": PLANNER_LLM_MODEL_NAME, 
+            "model": self.planner_name, 
             "messages":messages,
             "temperature": 0,
             "stream": False
         }
 
-        response = self.get_response(url = PLANNER_LLM_URL, data = request, is_call_fn=False)
+        response = self.get_response(url = self.planner_url, data = request, is_call_fn=False)
         print("==========================")
         print(type(response))
         print(response)
@@ -227,11 +232,18 @@ class AutoPipeline:
         llm_output = llm_output.replace("<AGENT_PIPELINE>","").replace("</AGENT_PIPELINE>","").replace("<\/AGENT_PIPELINE>","")
         return llm_output
 
-    def write_jsonl(self, data:Dict = None, file_path:str = None):
+
+    def write_jsonl(self, data: Dict = None, file_path: str = None):
+        def default_serializer(obj):
+            if isinstance(obj, (datetime.datetime, datetime.date)):
+                return obj.isoformat()
+            return str(obj)
+
         if data is not None and file_path is not None:
             with open(file_path, 'a', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False)
+                json.dump(data, f, ensure_ascii=False, default=default_serializer)
                 f.write('\n')
+
 
     def _fetch_image_urls(self, search_query, num_images):
         search_url = f"{IMAGE_SEARCH_URL}?q={search_query}&count={num_images}"
@@ -313,11 +325,17 @@ class AutoPipeline:
         logging.info(function_body)
         logging.info(arguments)
         
-        func_str_fixed = (function_body.encode('utf-8')
-                          .decode('unicode_escape')
-                          .replace(os.getenv("RESERVED_PATH",""),
-                                   EXECUTOR_OUTPUT_DIR)
-                          )
+        reserved_path = os.getenv("RESERVED_PATH", None)
+        if reserved_path is not None and reserved_path!="":
+            func_str_fixed = (function_body.encode('utf-8')
+                            .decode('unicode_escape')
+                            .replace(reserved_path, EXECUTOR_OUTPUT_DIR)
+                            )
+        else:
+            func_str_fixed = (function_body.encode('utf-8')
+                            .decode('unicode_escape')
+                            )
+            
         func_name = None
         for line in func_str_fixed.strip().split('\n'):
             line = line.strip()
@@ -461,6 +479,7 @@ class AutoPipeline:
                 raise RuntimeError(str(e))
             
             self.global_result_dict.update(step_data)
+            self.step_result = step_data
             
             logging.info(f"##5_5(In Loop):update_step_result_{idx+1}---->{self.global_result_dict}")
         
@@ -486,15 +505,35 @@ class AutoPipeline:
                                    mode=0, 
                                    expr_id = 0, 
                                    retry_limit = 0,
+                                   planner_args = None
                                    ):
         
         try:
+
+            if planner_args is not None:
+                self.planner_name = planner_args["planner_name"]
+                self.planner_url = planner_args["planner_url"]
+                self.sandbox_url = planner_args["sandbox_url"]
+                self.access_key = planner_args["access_key"]
+            else:
+                self.planner_name = PLANNER_LLM_MODEL_NAME
+                self.planner_url = PLANNER_LLM_URL
+                self.sandbox_url = CALL_FUNCTION_URL
+                self.access_key = ACCESS_KEY
+
             if error_history is None:
                 error_history = []
             self.global_response_str = ""
             self.global_result_dict = {}
             self.run_pipeline(mode = mode, query = query, media = media, error_history = error_history)
-            train_seed_positive={"id": id, "input":query, "output":self.global_response_str, "trajectory":self.global_result_dict, "history":error_history, "source":source, "model":PLANNER_LLM_MODEL_NAME}
+            train_seed_positive={"id": id, "input":query, "output":self.global_response_str, "trajectory":self.global_result_dict, "history":error_history, "source":source, "model":self.planner_name}
+            
+            logging.info("***************pure_result_log")
+            logging.info(self.step_result)
+            logging.info("***************pure_result_log")
+            
+            pure_result = ''.join(str(v) for v in self.step_result.values())
+            self.write_jsonl({"id": id, "result": pure_result}, os.path.join(RESULT_PREFIX, f"positive_{expr_id}_pure_result.jsonl"))
             self.write_jsonl(train_seed_positive, os.path.join(RESULT_PREFIX, f"positive_{expr_id}.jsonl"))
             return True, train_seed_positive
         except Exception as e:
@@ -531,13 +570,13 @@ class AutoPipeline:
                 )
 
             else:
-                train_seed_negetive={"id": id, "input":query, "output":self.global_response_str, "trajectory":self.global_result_dict, "history":error_history, "source":source, "model":PLANNER_LLM_MODEL_NAME}
+                train_seed_negetive={"id": id, "input":query, "output":self.global_response_str, "trajectory":self.global_result_dict, "history":error_history, "source":source, "model":self.planner_name}
                 self.write_jsonl(train_seed_negetive, os.path.join(RESULT_PREFIX, f"negetive_{expr_id}.jsonl"))
                 logging.error(MAXIMUM_RETRIES_REACHED_ERROR)
                 return False, train_seed_negetive
 
 
-def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0):
+def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0, planner_args=None):
     # input ("id","query","source")
     start_time = time.time()
     if isinstance(query, str):
@@ -558,8 +597,6 @@ def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0):
         retry_limit = 0
         print("Retry_limit only work in mode1!")
 
-    
-
     success_case_list = []
     failed_case_list = []
     for item in data:
@@ -571,7 +608,7 @@ def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0):
         
         id = item.get('id') if "id" in item else "unbound_id"
         source = item.get('source') if "source" in item else "unbound_source"
-        media = item.get('media') if "media" in item else None
+        media = item.get('media_path') if "media_path" in item else None
 
         is_success, pipeline_result = AutoPipeline().run_pipeline_error_handler(
             id = id, 
@@ -580,7 +617,8 @@ def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0):
             mode = mode,
             media = media,
             expr_id = expr_id, 
-            retry_limit = retry_limit
+            retry_limit = retry_limit,
+            planner_args = planner_args
             )
         
         if is_success:
@@ -602,6 +640,7 @@ def mode_switch(query = None, mode = 1, expr_id = 0, retry_limit = 0):
         "success_pipeline": success_case_list,
         "failed_pipeline": failed_case_list,
         "positive_pipeline_path": os.path.join(RESULT_PREFIX, f"positive_{expr_id}.jsonl"),
+        "pure_result_path": os.path.join(RESULT_PREFIX, f"positive_{expr_id}_pure_result.jsonl"),
         "negetive_pipeline_path": os.path.join(RESULT_PREFIX, f"negetive_{expr_id}.jsonl"),
         "inference_time": end_time - start_time
         }
